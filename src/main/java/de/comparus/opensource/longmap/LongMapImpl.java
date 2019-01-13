@@ -11,21 +11,25 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     private int threshold;
     private long count;
-    private LinkedList<Entry<V>>[] buckets;
+    private List<Entry<V>>[] buckets;
 
     public LongMapImpl() {
         this(DEFAULT_CAPACITY);
     }
 
     public LongMapImpl(int capacity) {
-        this.buckets = (LinkedList<Entry<V>>[]) new LinkedList<?>[capacity];
+        this.buckets = createBuckets(capacity);
         this.threshold = (int) (capacity * DEFAULT_LOAD_FACTOR);
+    }
+
+    private List<Entry<V>>[] createBuckets(int capacity) {
+        return (LinkedList<Entry<V>>[]) new LinkedList<?>[capacity];
     }
 
     @Override
     public V put(long key, V value) {
         int index = getBucketIndex(key);
-        LinkedList<Entry<V>> bucket = buckets[index];
+        List<Entry<V>> bucket = buckets[index];
         if (bucket != null) {
             for (Entry<V> entry : bucket) {
                 if (entry.key == key) {
@@ -42,7 +46,7 @@ public class LongMapImpl<V> implements LongMap<V> {
 
             addEntry(index, new Entry<>(key, value));
         } else {
-            buckets[index] = new LinkedList<>(Arrays.asList(new Entry<>(key, value)));
+            buckets[index] = createBucket(new Entry<>(key, value));
         }
 
         count++;
@@ -52,9 +56,9 @@ public class LongMapImpl<V> implements LongMap<V> {
     private void resize() {
         int oldCapacity = buckets.length;
         int newCapacity = oldCapacity * DEFAULT_BUCKETS_INCREASE;
-        LinkedList<Entry<V>>[] oldBuckets = buckets;
-        buckets = (LinkedList<Entry<V>>[]) new LinkedList<?>[newCapacity];
-        for (LinkedList<Entry<V>> bucket : oldBuckets) {
+        List<Entry<V>>[] oldBuckets = buckets;
+        buckets = createBuckets(newCapacity);
+        for (List<Entry<V>> bucket : oldBuckets) {
             if (bucket != null) {
                 bucket.forEach(e -> addEntry(getBucketIndex(e.key), e));
             }
@@ -62,17 +66,21 @@ public class LongMapImpl<V> implements LongMap<V> {
     }
 
     private void addEntry(int index, Entry<V> entry) {
-        LinkedList<Entry<V>> bucket = buckets[index];
+        List<Entry<V>> bucket = buckets[index];
         if (bucket != null) {
             bucket.add(entry);
         } else {
-            buckets[index] = new LinkedList<>(Arrays.asList(entry));
+            buckets[index] = createBucket(entry);
         }
+    }
+
+    private List createBucket(Entry<V> entry){
+        return new LinkedList<>(Arrays.asList(entry));
     }
 
     @Override
     public V get(long key) {
-        LinkedList<Entry<V>> bucket = buckets[getBucketIndex(key)];
+        List<Entry<V>> bucket = buckets[getBucketIndex(key)];
         if (bucket == null) { return null; }
         V value = null;
         for (Entry<V> entry : bucket) {
@@ -90,7 +98,7 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     @Override
     public V remove(long key) {
-        LinkedList<Entry<V>> bucket = buckets[getBucketIndex(key)];
+        List<Entry<V>> bucket = buckets[getBucketIndex(key)];
         V removedValue = null;
         for (Iterator<Entry<V>> i = bucket.iterator(); i.hasNext(); ) {
             Entry<V> entry = i.next();
