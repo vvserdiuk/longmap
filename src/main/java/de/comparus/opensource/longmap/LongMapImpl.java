@@ -55,7 +55,7 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     private void resize() {
         int oldCapacity = buckets.length;
-        int newCapacity = oldCapacity * DEFAULT_BUCKETS_INCREASE;
+        int newCapacity = oldCapacity * DEFAULT_BUCKETS_INCREASE; //TODO: forgot to add upper bound
         List<Entry<V>>[] oldBuckets = buckets;
         buckets = createBuckets(newCapacity);
         for (List<Entry<V>> bucket : oldBuckets) {
@@ -85,7 +85,7 @@ public class LongMapImpl<V> implements LongMap<V> {
         V value = null;
         for (Entry<V> entry : bucket) {
             if (entry.key == key) {
-                value = entry.value;
+                value = entry.value; //TODO: forgot to add break
             }
         }
         return value;
